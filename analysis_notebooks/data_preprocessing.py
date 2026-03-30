@@ -29,3 +29,10 @@ comments = pd.read_csv(COMMENTS_PATH)
 
 print("Posts shape:", posts.shape)
 print("Comments shape:", comments.shape)
+
+print("Posts columns:", posts.columns.tolist())
+print("Comments columns:", comments.columns.tolist())
+
+# Print first 5 comments
+print("\nSample comments:")
+print(comments['text'].head(10).to_string(index=False))
