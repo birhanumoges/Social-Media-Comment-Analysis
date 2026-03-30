@@ -50,6 +50,18 @@ print(missing_comments)
 
 print(f"\nComments shape: {comments.shape}, columns: {comments.columns.tolist()}")
 print(f"\nposts.shape: {posts.shape}, columns: {posts.columns.tolist()}")
+
+posts_with_comments = comments['post_id'].unique()
+no_comment_count = posts[~posts['msg_id'].isin(posts_with_comments)].shape[0]
+print(no_comment_count)
+
+# Posts with missing replies
+missing_replies_posts = posts[posts['replies'].isna()].shape[0]
+# Posts with zero comments
+zero_comments_posts = posts[~posts['msg_id'].isin(comments['post_id'].unique())].shape[0]
+print(f"Posts missing replies: {missing_replies_posts}")
+print(f"Posts with no comments: {zero_comments_posts}")
+
 if "text" in comments.columns:
     print(comments[['post_id','text']].head(10).to_string(index=False))
 
@@ -62,7 +74,7 @@ comments_grouped = comments.groupby("post_id")["text"].apply(list).to_dict()
 
 # --- Print posts with up to n_comments ---
 print("\n--- Posts with comments preview ---")
-for _, post in posts.head(20).iterrows():  # first 20 posts only
+for _, post in posts.tail(20).iterrows():  # last 20 posts only
     post_id = post["msg_id"]
     post_text = str(post["text"]) if pd.notna(post["text"]) else ""
     post_text_short = (post_text[:text_preview_len] + "...") if len(post_text) > text_preview_len else post_text
