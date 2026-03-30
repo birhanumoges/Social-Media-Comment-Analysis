@@ -3,8 +3,8 @@ import os
 import pandas as pd
 
 # --- Configuration ---
-n_comments = 3  # max number of comments per post
-text_preview_len = 80  # truncate long text for display
+n_comments = 3           # max number of comments per post
+text_preview_len = 80    # truncate long text for display
 
 # --- Project root ---
 try:
@@ -30,53 +30,55 @@ if not COMMENTS_PATH.exists():
 posts = pd.read_csv(POSTS_PATH)
 comments = pd.read_csv(COMMENTS_PATH)
 
-# --- Configure pandas display ---
-pd.set_option('display.max_columns', None)
-pd.set_option('display.width', 120)
-pd.set_option('display.max_colwidth', text_preview_len)
+# --- Deduplicate ---
+posts = posts.drop_duplicates(subset='msg_id')
+comments = comments.drop_duplicates(subset='comment_id')
 
-# --- Show shapes and columns ---
-print(f"\nPosts shape: {posts.shape}, columns: {posts.columns.tolist()}")
-print(posts.head(10).to_string(index=False))
-# Total missing values per column in posts
-missing_posts = posts.isna().sum()
-print("Missing values per column in posts:")
-print(missing_posts)
+# --- Fill Missing Values ---
+posts['views'] = posts['views'].fillna(0)
+posts['forwards'] = posts['forwards'].fillna(0)
+posts['replies'] = posts['replies'].fillna(0)
+posts['media_type'] = posts['media_type'].fillna('Unknown')
+posts['text'] = posts['text'].fillna('<media_only>')
+posts['reply_to_msg_id'] = posts['reply_to_msg_id'].fillna('None')
 
-# Total missing values per column in comments
-missing_comments = comments.isna().sum()
-print("\nMissing values per column in comments:")
-print(missing_comments)
-
-print(f"\nComments shape: {comments.shape}, columns: {comments.columns.tolist()}")
-print(f"\nposts.shape: {posts.shape}, columns: {posts.columns.tolist()}")
-
-posts_with_comments = comments['post_id'].unique()
-no_comment_count = posts[~posts['msg_id'].isin(posts_with_comments)].shape[0]
-print(no_comment_count)
-
-# Posts with missing replies
-missing_replies_posts = posts[posts['replies'].isna()].shape[0]
-# Posts with zero comments
-zero_comments_posts = posts[~posts['msg_id'].isin(comments['post_id'].unique())].shape[0]
-print(f"Posts missing replies: {missing_replies_posts}")
-print(f"Posts with no comments: {zero_comments_posts}")
-
-if "text" in comments.columns:
-    print(comments[['post_id','text']].head(10).to_string(index=False))
+comments['text'] = comments['text'].fillna('<deleted>')
+comments['sender_id'] = comments['sender_id'].fillna('Unknown')
 
 # --- Ensure IDs are integers ---
 posts["msg_id"] = posts["msg_id"].fillna(-1).astype(int)
 comments["post_id"] = comments["post_id"].fillna(-1).astype(int)
 
-# --- Group comments by post_id ---
+# --- Count comments per post ---
+comments_count = comments.groupby('post_id')['comment_id'].count().reset_index()
+comments_count.rename(columns={'comment_id': 'num_comments'}, inplace=True)
+posts = posts.merge(comments_count, how='left', left_on='msg_id', right_on='post_id')
+posts['num_comments'] = posts['num_comments'].fillna(0).astype(int)
+posts.drop(columns=['post_id'], inplace=True)
+
+# --- Posts with no comments ---
+no_comment_count = (posts['num_comments'] == 0).sum()
+
+# --- Data quality summary ---
+missing_posts = posts.isna().sum()
+missing_comments = comments.isna().sum()
+
+print(f"\nPosts shape: {posts.shape}")
+print("Missing values per column in posts:")
+print(missing_posts)
+print(f"\nComments shape: {comments.shape}")
+print("Missing values per column in comments:")
+print(missing_comments)
+print(f"\nPosts with no comments: {no_comment_count}")
+
+# --- Group comments by post_id for preview ---
 comments_grouped = comments.groupby("post_id")["text"].apply(list).to_dict()
 
-# --- Print posts with up to n_comments ---
+# --- Preview first 20 posts with comments ---
 print("\n--- Posts with comments preview ---")
-for _, post in posts.tail(20).iterrows():  # last 20 posts only
+for _, post in posts.head(20).iterrows():
     post_id = post["msg_id"]
-    post_text = str(post["text"]) if pd.notna(post["text"]) else ""
+    post_text = str(post["text"])
     post_text_short = (post_text[:text_preview_len] + "...") if len(post_text) > text_preview_len else post_text
     print(f"\nPost ID {post_id} - Text: {post_text_short}")
 
@@ -86,8 +88,8 @@ for _, post in posts.tail(20).iterrows():  # last 20 posts only
         continue
 
     for i, comment_text in enumerate(post_comments[:n_comments], start=1):
-        comment_text = str(comment_text) if pd.notna(comment_text) else ""
+        comment_text = str(comment_text)
         comment_text_short = (comment_text[:text_preview_len] + "...") if len(comment_text) > text_preview_len else comment_text
         print(f"  Comment {i}: {comment_text_short}")
 
-print("\nProcessed first 10 posts successfully.")
+print("\n✅ Data preprocessing completed successfully.")
