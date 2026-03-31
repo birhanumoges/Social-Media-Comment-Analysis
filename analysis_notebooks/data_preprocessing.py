@@ -119,3 +119,42 @@ for _, post in posts.head(20).iterrows():
         print(f"  Comment {i}: {comment_text_short}")
 
 print("\n✅ Data preprocessing completed successfully.")
+
+print("==============other preprocessing steps to consider==============")
+print("\n--- Final DataFrames ---")
+
+import re
+import emoji
+import pandas as pd
+
+def clean_text(text):
+    if not isinstance(text, str):
+        return ""
+    
+    # 1. Remove URLs (links)
+    text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
+    
+    # 2. Remove mentions and hashtags (optional - keep if needed for analysis)
+    text = re.sub(r'@\w+', '', text)  # remove @mentions
+    # text = re.sub(r'#\w+', '', text)  # uncomment to remove hashtags
+    
+    # 3. Remove emojis OR convert them to text
+    # Option A: Remove emojis
+    text = emoji.replace_emoji(text, replace='')
+    # Option B: Convert emojis to text (useful for sentiment)
+    # text = emoji.demojize(text, delimiters=(":", ":"))
+    
+    # 4. Remove special characters and digits (keep only letters and spaces)
+    text = re.sub(r'[^a-zA-Z\u1200-\u137F\s]', '', text)  # keeps Amharic and English
+    
+    # 5. Convert to lowercase (if English-heavy, but Amharic doesn't have case)
+    text = text.lower()
+    
+    # 6. Remove extra whitespace
+    text = ' '.join(text.split())
+    
+    return text
+
+# Apply cleaning
+posts['cleaned_text'] = posts['text'].apply(clean_text)
+comments['cleaned_text'] = comments['text'].apply(clean_text)
