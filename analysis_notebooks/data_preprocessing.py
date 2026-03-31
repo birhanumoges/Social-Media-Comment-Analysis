@@ -158,3 +158,18 @@ def clean_text(text):
 # Apply cleaning
 posts['cleaned_text'] = posts['text'].apply(clean_text)
 comments['cleaned_text'] = comments['text'].apply(clean_text)
+
+# Detect if text is Amharic, English, or mixed
+from langdetect import detect, DetectorFactory
+DetectorFactory.seed = 0
+
+def detect_lang(text):
+    try:
+        return detect(text)
+    except:
+        return 'unknown'
+
+# Sample first 1000 comments for language distribution
+comments_sample = comments['cleaned_text'].head(1000).apply(detect_lang)
+print(comments_sample.value_counts())
+
