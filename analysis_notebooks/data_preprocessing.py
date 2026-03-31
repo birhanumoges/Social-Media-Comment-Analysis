@@ -40,6 +40,12 @@ print(comments.isna().sum())
 print(f"\nDuplicate posts: {posts.duplicated(subset='msg_id').sum()}")
 print(f"Duplicate comments: {comments.duplicated(subset='comment_id').sum()}")
 
+# Checking data types
+print("\nData types in Posts:")
+print(posts.dtypes)
+print("\nData types in Comments:")
+print(comments.dtypes)
+
 # ================= DEDUPLICATE =================
 posts = posts.drop_duplicates(subset='msg_id')
 comments = comments.drop_duplicates(subset='comment_id')
