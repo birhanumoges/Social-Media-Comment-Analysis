@@ -121,8 +121,6 @@ for _, post in posts.head(20).iterrows():
         comment_text_short = (comment_text[:text_preview_len] + "...") if len(comment_text) > text_preview_len else comment_text
         print(f"  Comment {i}: {comment_text_short}")
 
-print("\n✅ Data preprocessing completed successfully.")
-
 #================ other preprocessing steps to consider==============")
 def clean_text(text):
     if not isinstance(text, str):
@@ -169,4 +167,16 @@ def detect_lang(text):
 # Sample first 1000 comments for language distribution
 comments_sample = comments['cleaned_text'].head(1000).apply(detect_lang)
 print(comments_sample.value_counts())
+
+# For posts
+posts['text_length'] = posts['cleaned_text'].str.len()
+posts['word_count'] = posts['cleaned_text'].str.split().str.len()
+posts['has_question'] = posts['cleaned_text'].str.contains('\?').astype(int)
+
+# For comments
+comments['text_length'] = comments['cleaned_text'].str.len()
+comments['word_count'] = comments['cleaned_text'].str.split().str.len()
+
+
+print("\n✅ Data preprocessing completed successfully.")
 
