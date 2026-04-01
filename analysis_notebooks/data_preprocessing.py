@@ -190,3 +190,29 @@ print(f"Total comments pointing to missing posts: {total_invalid_comments}")
 
 print("\n✅ Data preprocessing completed successfully.")
 
+#===================exploratory data analysis steps to consider===================
+top_posts = posts.nlargest(10, 'num_comments')[['msg_id', 'text', 'num_comments']]
+print("Top 10 posts by comment count:")
+print(top_posts)
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+plt.figure(figsize=(12, 5))
+
+plt.subplot(1, 2, 1)
+plt.hist(posts['num_comments'], bins=50, edgecolor='black')
+plt.title('Distribution of Comments per Post')
+plt.xlabel('Number of Comments')
+plt.ylabel('Frequency')
+
+plt.subplot(1, 2, 2)
+plt.boxplot(posts['num_comments'])
+plt.title('Boxplot of Comments per Post')
+plt.ylabel('Number of Comments')
+
+plt.tight_layout()
+plt.show()
+
+
+
