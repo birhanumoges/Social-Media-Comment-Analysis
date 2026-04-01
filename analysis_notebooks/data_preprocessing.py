@@ -214,5 +214,24 @@ plt.ylabel('Number of Comments')
 plt.tight_layout()
 plt.show()
 
+# Post text length distribution
+plt.figure(figsize=(12, 4))
 
+plt.subplot(1, 2, 1)
+plt.hist(posts['text_length'], bins=30, edgecolor='black')
+plt.title('Post Text Length Distribution')
+plt.xlabel('Character Count')
+plt.ylabel('Frequency')
+
+plt.subplot(1, 2, 2)
+sns.scatterplot(x=posts['text_length'], y=posts['num_comments'])
+plt.title('Text Length vs. Number of Comments')
+plt.xlabel('Post Length (characters)')
+plt.ylabel('Number of Comments')
+
+plt.tight_layout()
+plt.show()
+
+# Correlation
+print(posts[['text_length', 'num_comments']].corr())
 
