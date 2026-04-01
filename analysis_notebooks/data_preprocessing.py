@@ -254,3 +254,27 @@ print(top_commenters)
 # Average comments per user
 avg_comments_per_user = len(comments) / comments['sender_id'].nunique()
 print(f"Average comments per user: {avg_comments_per_user:.2f}")
+
+# Convert date_utc to datetime if not already
+comments['date_utc'] = pd.to_datetime(comments['date_utc'])
+posts['date_utc'] = pd.to_datetime(posts['date_utc'])
+
+# Comments by hour of day
+comments['hour'] = comments['date_utc'].dt.hour
+comments['day_of_week'] = comments['date_utc'].dt.dayofweek
+
+# Plot comment activity by hour
+plt.figure(figsize=(12, 4))
+plt.subplot(1, 2, 1)
+comments['hour'].value_counts().sort_index().plot(kind='bar')
+plt.title('Comments by Hour of Day')
+plt.xlabel('Hour')
+plt.ylabel('Number of Comments')
+
+plt.subplot(1, 2, 2)
+comments['day_of_week'].value_counts().sort_index().plot(kind='bar')
+plt.title('Comments by Day of Week')
+plt.xlabel('Day (0=Monday, 6=Sunday)')
+plt.ylabel('Number of Comments')
+plt.tight_layout()
+plt.show()
